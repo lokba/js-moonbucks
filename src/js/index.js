@@ -1,36 +1,14 @@
-/*
-step1 요구사항
-// 메뉴 추가
-[x] 에스프레스 메뉴에 확인 버튼 이벤트 리스너 등록하기
-[x] 에스프레스 메뉴에 엔터키 입력으로 이벤트 리스너 등록하기
-[x] 추가되는 메뉴 아이템은  <ul id="espresso-menu-list" class="mt-3 pl-0"></ul> 안에 삽입(readme)
-[x] 총 메뉴 갯수를 count하여 보여주기
-[x] 메뉴 추가시, input값 '' 초기화
-[x] 입력값이 ''인 경우, 추가 되지 않는다
-
-
-// 메뉴 수정
-[x] 수정 버튼 클릭시 prompt 이용하여 메뉴 이름 수정
-
-
-// 메뉴 삭제
-[x] 삭제 버튼 클릭시 confirm 이용하여 메뉴 삭제 
-[x] 총 메뉴 갯수를 count하여 보여주기
-*/
-
-//Dom 객체 만들어주는 함수
-const $ = (tag) => document.querySelector(tag);
+const $ = (selector) => document.querySelector(selector);
 
 function App() {
   this.menu = [];
 
-  //렌더링하는 함수
   const render = () => {
     $("#espresso-menu-list").innerHTML = this.menu
       .map(
         (item, index) =>
           `<li class="menu-list-item d-flex items-center py-2">
-    <span class="w-100 pl-2 menu-name">${item.name}</span>
+    <span class="w-100 pl-2 menu-name">${item.menuName}</span>
     <button
       type="button"
       id=${index}
@@ -48,65 +26,80 @@ function App() {
   </li>`
       )
       .join("");
-
-    // 메뉴의 수를 카운터하는 함수
-    countMenuItem();
+    updateMenuCount();
+    $("#espresso-menu-name").value = "";
   };
 
-  const countMenuItem = () => {
+  const updateMenuCount = () => {
     $(".menu-count").innerText = `총 ${this.menu.length}개`;
   };
 
+  const updateMenuName = (menuName, menuId) => {
+    let value = prompt("수정하실 메뉴 명을 입력해주세요", menuName);
+    this.menu[menuId].name = value;
+    render();
+  };
+
+  const removeMenuName = (menuId) => {
+    if (confirm("정말로 삭제하시겠습니까?")) {
+      this.menu.splice(menuId, 1);
+      render();
+    }
+  };
+
   $("#espresso-menu-list").addEventListener("click", (e) => {
-    //수정하는 버튼을 클릭하는 경우
+    //수정하는 버튼을 클릭하는 경우 -> 이벤트 위임을 이용
     if (e.target.classList.contains("menu-edit-button")) {
       const menuName = e.target.closest("li").querySelector(".menu-name")
         .innerText;
 
-      let value = prompt("수정하실 메뉴 명을 입력해주세요", menuName);
-      this.menu[e.target.id].name = value;
-      render();
+      updateMenuName(menuName, e.target.id);
     }
 
-    //삭제하는 버튼을 클릭하는 경우
+    //삭제하는 버튼을 클릭하는 경우 -> 이벤트 위임을 이용
     if (e.target.classList.contains("menu-remove-button")) {
-      if (confirm("정말로 삭제하시겠습니까?")) {
-        this.menu.splice(e.target.id, 1);
-        render();
-      }
+      removeMenuName(e.target.id);
     }
   });
 
   $("#espresso-menu-form").addEventListener("submit", (e) => {
-    //form 이벤트 리스너 방지
     e.preventDefault();
   });
 
   $("#espresso-menu-submit-button").addEventListener("click", (e) => {
-    const inputValue = $("#espresso-menu-name").value;
+    const menuName = $("#espresso-menu-name").value;
 
-    if (inputValue === "") {
-      alert("메뉴이름이 입력되지 않았습니다");
+    if (menuName === "") {
+      alert("값을 입력해주세요.");
       return;
     }
 
-    this.menu.push({ name: inputValue });
+    this.menu.push({ menuName });
     render();
-    $("#espresso-menu-name").value = "";
   });
 
   $("#espresso-menu-name").addEventListener("keypress", (e) => {
+    if (e.key !== "Enter") {
+      return;
+    }
+
+    if ($("#espresso-menu-name").value === "") {
+      alert("값을 입력해주세요.");
+      return;
+    }
+
     if (e.key === "Enter") {
-      const inputValue = $("#espresso-menu-name").value;
+      const menuName = $("#espresso-menu-name").value;
 
-      if (inputValue === "") {
-        alert("메뉴이름이 입력되지 않았습니다");
-        return;
-      }
-
-      this.menu.push({ name: inputValue });
+      this.menu.push({ menuName });
       render();
-      $("#espresso-menu-name").value = "";
+    }
+  });
+
+  $("nav").addEventListener("click", (e) => {
+    if (e.target.classList.contains("cafe-category-name")) {
+      let categoryName = e.target.innerText;
+      $(".mt-1").innerText = `${categoryName} 메뉴 관리`;
     }
   });
 }
